@@ -26,6 +26,104 @@
 
 #define MIC_PIN A0
 
+class ColorWheel {
+  public:
+    // Red green and blue
+    int rbRed = 0;
+    int rbGreen = 0;
+    int rbBlue = 0;
+
+	  ColorWheel() {}
+
+    void resetRainbow() {
+      state = 0;
+      rbRed = 255;
+      rbGreen = 0;
+      rbBlue = 0;
+      red_done = true;
+      green_done = false;
+      blue_done = false;
+    }
+
+    void resetRainbow(int colorsIn){
+      for (int i = 0; i < colorsIn; i++)
+        rollingRainbow(1);
+    }
+
+    void rollingRainbow(int jump) {
+      switch (state) {
+        case 0:
+          if (rbGreen == 255) {
+            state = 1;
+          } else {
+            rbGreen = rbGreen + jump;
+          }
+          break;
+        case 1:
+          if (rbRed == 0) {
+            state = 2;
+          } else {
+            rbRed = rbRed - jump;
+          }
+          break;
+        case 2:
+          if (rbBlue == 255) {
+            state = 3;
+          } else {
+            rbBlue = rbBlue + jump;
+          }
+          break;
+        case 3:
+          if (rbGreen == 0) {
+            state = 4;
+          } else {
+            rbGreen = rbGreen - jump;
+          }
+          break;
+        case 4:
+          if (rbRed == 255) {
+            state = 5;
+          } else {
+            rbRed = rbRed + jump;
+          }
+          break;
+        case 5:
+          if (rbBlue == 0) {
+            state = 0;
+          } else {
+            rbBlue = rbBlue - jump;
+          }
+          break;
+      }
+
+      // Handle multiples smaller than things that add up to 0 or 255
+      if (rbRed > 255){
+        rbRed = 255;
+      }
+      if (rbGreen > 255){
+        rbGreen = 255;
+      }
+      if (rbBlue > 255){
+        rbBlue = 255;
+      }
+      if (rbRed < 0){
+        rbRed = 0;
+      }
+      if (rbGreen < 0){
+        rbGreen = 0;
+      }
+      if (rbBlue < 0){
+        rbBlue = 0;
+      }
+    }
+  
+  private:
+    int state = 0;
+    bool red_done = false;
+    bool green_done = false;
+    bool blue_done = false;
+};
+
 // MATRIX DECLARATION:
 // Parameter 1 = width of NeoPixel matrix
 // Parameter 2 = height of matrix
@@ -93,15 +191,8 @@ const uint16_t ORANGE = matrix.Color(255, 127, 0);
 const uint16_t WHITE = matrix.Color(255, 255, 255);
 const uint16_t BLACK = matrix.Color(0, 0, 0);
 
-int state = 0;
-bool red_done = false;
-bool green_done = false;
-bool blue_done = false;
-
-// Red green and blue
-int rbRed = 0;
-int rbGreen = 0;
-int rbBlue = 0;
+ColorWheel sideColorWheel = ColorWheel();
+ColorWheel matrixColorWheel = ColorWheel();
 
 int matrixWidth = matrix.width();
 
@@ -109,89 +200,8 @@ int endCounter;
 
 void resetRainbowScroll() {
   matrixWidth = matrix.width();
-  resetRainbow();
-}
-
-void resetRainbow() {
-  state = 0;
-  rbRed = 255;
-  rbGreen = 0;
-  rbBlue = 0;
-  red_done = true;
-  green_done = false;
-  blue_done = false;
-}
-
-void resetRainbow(int colorsIn){
-  for (int i = 0; i < colorsIn; i++)
-    rollingRainbow(1);
-}
-
-void rollingRainbow(int jump) {
-  switch (state) {
-    case 0:
-      if (rbGreen == 255) {
-        state = 1;
-      } else {
-        rbGreen = rbGreen + jump;
-      }
-      break;
-    case 1:
-      if (rbRed == 0) {
-        state = 2;
-      } else {
-        rbRed = rbRed - jump;
-      }
-      break;
-    case 2:
-      if (rbBlue == 255) {
-        state = 3;
-      } else {
-        rbBlue = rbBlue + jump;
-      }
-      break;
-    case 3:
-      if (rbGreen == 0) {
-        state = 4;
-      } else {
-        rbGreen = rbGreen - jump;
-      }
-      break;
-    case 4:
-      if (rbRed == 255) {
-        state = 5;
-      } else {
-        rbRed = rbRed + jump;
-      }
-      break;
-    case 5:
-      if (rbBlue == 0) {
-        state = 0;
-      } else {
-        rbBlue = rbBlue - jump;
-      }
-      break;
-  }
-
-  // Handle multiples smaller than things that add up to 0 or 255
-  if (rbRed > 255){
-    rbRed = 255;
-  }
-  if (rbGreen > 255){
-    rbGreen = 255;
-  }
-  if (rbBlue > 255){
-    rbBlue = 255;
-  }
-  if (rbRed < 0){
-    rbRed = 0;
-  }
-  if (rbGreen < 0){
-    rbGreen = 0;
-  }
-  if (rbBlue < 0){
-    rbBlue = 0;
-  }
+  sideColorWheel.resetRainbow();
+  matrixColorWheel.resetRainbow();
 }
 
 //View array spreadsheet here: https://docs.google.com/spreadsheets/d/1uPBvxobsNldO1_tUTYW7d_6D1sfJVXOsJzB6nNNpvE0/edit?usp=sharing
@@ -292,12 +302,12 @@ void loop() {
       matrix.show();
       break;
     case 1:
-      rainbow();
+      rainbow(15);
       rainbowScrollingText(F("SLICE! SLICE! SQUEEZE!!"), 2, 15, 2, false);
       break;
     case 2:
-      rainbow();
-      rainbowScrollingText(F("SLICE! SLICE! SQUEEZE!!"), 2, 15, 2, true);
+      rainbow(15);
+      rainbowScrollingText(F("SLICE! SLICE! SQUEEZE!!"), 2, 85, 2, true);
       break;
     case 3:
       noise(micVolume, analogRead(MAX_PIN), analogRead(MIN_PIN));
@@ -355,7 +365,7 @@ void blink(int red, int green, int blue) {
   restartSide();
 }
 
-void rainbow() {
+void rainbow(int colorSpeed) {
   if (!currentSideMethod.equals("rainbow")) {
     currentSideMethod = "rainbow";
     sideSequenceStartTime = time;
@@ -363,7 +373,8 @@ void rainbow() {
     clearMatrix();
   }
 
-  setAll(rbRed, rbGreen, rbBlue);
+  setAll(sideColorWheel.rbRed, sideColorWheel.rbGreen, sideColorWheel.rbBlue);
+  sideColorWheel.rollingRainbow(colorSpeed);
 
   restartSide();
 }
@@ -415,29 +426,29 @@ void verticalRainbow() {
     cycleCount = 0;
     strip.clear();
     clearMatrix();
-    resetRainbow();
+    matrixColorWheel.resetRainbow();
   } else {
     int rainbowStep = 15;
     cycleCount++;
 
-    resetRainbow();
+    matrixColorWheel.resetRainbow();
     // Jump forwarward to where the rainbow stopped plus one
-    resetRainbow((cycleCount * (6 + matrix.width())) + rainbowStep);
+    matrixColorWheel.resetRainbow((cycleCount * (6 + matrix.width())) + rainbowStep);
 
     for (int l = 1; l <= 3; l++){
-      setColumn(l, rbRed, rbGreen, rbBlue);
-      rollingRainbow(rainbowStep);
+      setColumn(l, matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue);
+      matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
     for (int i = 0; i < matrix.width(); i++){
         //matrix.drawLine(i, 0, i, 16, matrix.Color(rbRed, rbGreen, rbBlue));
-        matrix.drawFastVLine(i, 0, 16, matrix.Color(rbRed, rbGreen, rbBlue));
-        rollingRainbow(rainbowStep);
+        matrix.drawFastVLine(i, 0, 16, matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
+        matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
     for (int l = 4; l <= 6; l++){
-      setColumn(l, rbRed, rbGreen, rbBlue);
-      rollingRainbow(rainbowStep);
+      setColumn(l, matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue);
+      matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
     // Switch back and forth every 2 seconds
@@ -714,6 +725,7 @@ void coloredScrollingText(String scrollText, int pauseTime, int moveDelta, uint1
     scrollSequenceStartTime = time;
     scrollFinished = false;
     clearMatrix();
+    resetRainbowScroll();
   }
 
   matrix.setTextColor(color);
@@ -730,8 +742,8 @@ void rainbowScrollingText(String scrollText, int pauseTime, int colorSpeed, int 
   }  
 
   if (!rainbowText){
-    matrix.setTextColor(matrix.Color(rbRed, rbGreen, rbBlue));
-    rollingRainbow(colorSpeed);
+    matrix.setTextColor(matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
+    matrixColorWheel.rollingRainbow(colorSpeed);
   }
   scrollingText(scrollText, pauseTime, moveDelta, rainbowText, colorSpeed);
 }
@@ -745,10 +757,10 @@ void scrollingText(String scrollText, int pauseTime, int moveDelta, bool rainbow
 
   matrix.setCursor(matrixWidth, 1);
   if (rainbow){
-    resetRainbow();
+    matrixColorWheel.resetRainbow();
     for (int i = 0; i < scrollText.length(); i++){
-      rollingRainbow(colorSpeed);
-      matrix.setTextColor(matrix.Color(rbRed, rbGreen, rbBlue));
+      matrixColorWheel.rollingRainbow(colorSpeed);
+      matrix.setTextColor(matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
       matrix.print(scrollText.charAt(i));
       Serial.print(scrollText.charAt(i));
     }
