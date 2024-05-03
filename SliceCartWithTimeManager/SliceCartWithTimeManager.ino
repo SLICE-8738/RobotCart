@@ -26,20 +26,25 @@
 
 #define MIC_PIN A0
 
+/**
+ * Defined a group of variables focused on rolling through the colorwheel
+ * at a given speed. Allows you to create a colorwheel then spin it at a given speed
+ * which allows you to get red, green and blue values out for that color
+ **/
 class ColorWheel {
   public:
     // Red green and blue
-    int rbRed = 0;
-    int rbGreen = 0;
-    int rbBlue = 0;
+    int red = 0;
+    int green = 0;
+    int blue = 0;
 
 	  ColorWheel() {}
 
     void resetRainbow() {
       state = 0;
-      rbRed = 255;
-      rbGreen = 0;
-      rbBlue = 0;
+      red = 255;
+      green = 0;
+      blue = 0;
       red_done = true;
       green_done = false;
       blue_done = false;
@@ -53,67 +58,67 @@ class ColorWheel {
     void rollingRainbow(int jump) {
       switch (state) {
         case 0:
-          if (rbGreen == 255) {
+          if (green == 255) {
             state = 1;
           } else {
-            rbGreen = rbGreen + jump;
+            green = green + jump;
           }
           break;
         case 1:
-          if (rbRed == 0) {
+          if (red == 0) {
             state = 2;
           } else {
-            rbRed = rbRed - jump;
+            red = red - jump;
           }
           break;
         case 2:
-          if (rbBlue == 255) {
+          if (blue == 255) {
             state = 3;
           } else {
-            rbBlue = rbBlue + jump;
+            blue = blue + jump;
           }
           break;
         case 3:
-          if (rbGreen == 0) {
+          if (green == 0) {
             state = 4;
           } else {
-            rbGreen = rbGreen - jump;
+            green = green - jump;
           }
           break;
         case 4:
-          if (rbRed == 255) {
+          if (red == 255) {
             state = 5;
           } else {
-            rbRed = rbRed + jump;
+            red = red + jump;
           }
           break;
         case 5:
-          if (rbBlue == 0) {
+          if (blue == 0) {
             state = 0;
           } else {
-            rbBlue = rbBlue - jump;
+            blue = blue - jump;
           }
           break;
       }
 
       // Handle multiples smaller than things that add up to 0 or 255
-      if (rbRed > 255){
-        rbRed = 255;
+      if (red > 255){
+        red = 255;
       }
-      if (rbGreen > 255){
-        rbGreen = 255;
+      if (green > 255){
+        green = 255;
       }
-      if (rbBlue > 255){
-        rbBlue = 255;
+      if (blue > 255){
+        blue = 255;
       }
-      if (rbRed < 0){
-        rbRed = 0;
+      if (red < 0){
+        red = 0;
       }
-      if (rbGreen < 0){
-        rbGreen = 0;
+      if (green < 0){
+        green = 0;
       }
-      if (rbBlue < 0){
-        rbBlue = 0;
+      if (blue < 0){
+        blue = 0;
       }
     }
   
@@ -373,7 +378,7 @@ void rainbow(int colorSpeed) {
     clearMatrix();
   }
 
-  setAll(sideColorWheel.rbRed, sideColorWheel.rbGreen, sideColorWheel.rbBlue);
+  setAll(sideColorWheel.red, sideColorWheel.green, sideColorWheel.blue);
   sideColorWheel.rollingRainbow(colorSpeed);
 
   restartSide();
@@ -436,18 +441,18 @@ void verticalRainbow() {
     matrixColorWheel.resetRainbow((cycleCount * (6 + matrix.width())) + rainbowStep);
 
     for (int l = 1; l <= 3; l++){
-      setColumn(l, matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue);
+      setColumn(l, matrixColorWheel.red, matrixColorWheel.green, matrixColorWheel.blue);
       matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
     for (int i = 0; i < matrix.width(); i++){
-        //matrix.drawLine(i, 0, i, 16, matrix.Color(rbRed, rbGreen, rbBlue));
-        matrix.drawFastVLine(i, 0, 16, matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
+        //matrix.drawLine(i, 0, i, 16, matrix.Color(red, green, blue));
+        matrix.drawFastVLine(i, 0, 16, matrix.Color(matrixColorWheel.red, matrixColorWheel.green, matrixColorWheel.blue));
         matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
     for (int l = 4; l <= 6; l++){
-      setColumn(l, matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue);
+      setColumn(l, matrixColorWheel.red, matrixColorWheel.green, matrixColorWheel.blue);
       matrixColorWheel.rollingRainbow(rainbowStep);
     }
 
@@ -742,7 +747,7 @@ void rainbowScrollingText(String scrollText, int pauseTime, int colorSpeed, int 
   }  
 
   if (!rainbowText){
-    matrix.setTextColor(matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
+    matrix.setTextColor(matrix.Color(matrixColorWheel.red, matrixColorWheel.green, matrixColorWheel.blue));
     matrixColorWheel.rollingRainbow(colorSpeed);
   }
   scrollingText(scrollText, pauseTime, moveDelta, rainbowText, colorSpeed);
@@ -760,7 +765,7 @@ void scrollingText(String scrollText, int pauseTime, int moveDelta, bool rainbow
     matrixColorWheel.resetRainbow();
     for (int i = 0; i < scrollText.length(); i++){
       matrixColorWheel.rollingRainbow(colorSpeed);
-      matrix.setTextColor(matrix.Color(matrixColorWheel.rbRed, matrixColorWheel.rbGreen, matrixColorWheel.rbBlue));
+      matrix.setTextColor(matrix.Color(matrixColorWheel.red, matrixColorWheel.green, matrixColorWheel.blue));
       matrix.print(scrollText.charAt(i));
       Serial.print(scrollText.charAt(i));
     }
