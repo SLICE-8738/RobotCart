@@ -8,22 +8,32 @@
 
 // How many leds in your strip?
 #define NUM_LEDS 300
-#define DATA_PIN 3
+// What pin is it on
+#define DATA_PIN 4
 
+// Matrix definition
 #define GRID_NUM_ROWS 8
 #define GRID_NUM_COLS 32
 #define GRID_TILES_X 2
 #define GRID_TILES_Y 2
-
+// Matrix Data Pin
 #define DISPLAY_PIN 7
 
+// How wide is a single charater in LEDs
 #define CHAR_PIX_WIDTH 6
+// Button pin for up
 #define TOP_BUTTON_PIN 9
+// Button pin for down
 #define BOTTOM_BUTTON_PIN 8
+// Min variable transistor
 #define MIN_PIN A1
+// Max variable transistor
 #define MAX_PIN A2
+
+// How many LED programs do we have to loop through
 #define LED_PROGRAMS 8
 
+// Where is the mic connected?
 #define MIC_PIN A0
 
 /**
@@ -40,6 +50,7 @@ class ColorWheel {
 
 	  ColorWheel() {}
 
+    // Sets the colorwheel to SLICE orange
     void resetRainbow() {
       state = 0;
       red = 255;
@@ -50,11 +61,19 @@ class ColorWheel {
       blue_done = false;
     }
 
+    /**
+     * Resets the rainbow to a set number of colors in (always in single jumps)
+     * Used in rolling rainbow applications where we need to pick up in a known state
+     * and set a bunch of follow up elements to create a wave
+     **/
     void resetRainbow(int colorsIn){
       for (int i = 0; i < colorsIn; i++)
         rollingRainbow(1);
     }
 
+    /**
+     * Roll through the rainbow
+     **/
     void rollingRainbow(int jump) {
       switch (state) {
         case 0:
@@ -177,7 +196,8 @@ Adafruit_NeoPixel strip(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
-const uint16_t colors[] = {
+// A simple list of rainbow colors starting with red to loop through
+const uint16_t rainbowColors[] = {
   matrix.Color(255, 0, 0),
   matrix.Color(255, 127, 0),
   matrix.Color(255, 255, 0),
@@ -192,19 +212,21 @@ const uint16_t colors[] = {
   matrix.Color(255, 0, 127)
 };
 
+// Quick reference colors
 const uint16_t ORANGE = matrix.Color(255, 127, 0);
 const uint16_t WHITE = matrix.Color(255, 255, 255);
 const uint16_t BLACK = matrix.Color(0, 0, 0);
 
+// Colorwheels to rotate through for side panels and matrix effects
 ColorWheel sideColorWheel = ColorWheel();
 ColorWheel matrixColorWheel = ColorWheel();
 
-int matrixWidth = matrix.width();
+// The offset from the left for displaying text on the matrix
+int matrixOffset = matrix.width();
 
-int endCounter;
-
+// Reset both rainbow color wheels and also reset the matrix offset
 void resetRainbowScroll() {
-  matrixWidth = matrix.width();
+  matrixOffset = matrix.width();
   sideColorWheel.resetRainbow();
   matrixColorWheel.resetRainbow();
 }
@@ -218,6 +240,7 @@ void resetRainbowScroll() {
 //Leds 256 to 214 compose left column 2
 //Leds 257 to 298 compose left column 3
 
+// Microphone volume
 int micVolume = 0;
 
 //Method Switcher Variables
@@ -227,17 +250,17 @@ int sequence = 0;
 //FastLoop Variables
 int time = 0;
 
+// Variables to track the state of the side panel sequences
 int sideSequenceStartTime = 0;
 String currentSideMethod = "";
 int timeInSideSequence = 0;
 bool sideFinished = false;
 
+// Variables to track the state of the matrix 
 int scrollSequenceStartTime = 0;
 String currentScrollMethod = "";
 int timeInScrollSequence = 0;
 bool scrollFinished = false;
-
-int groupPhase = 0;
 
 void setup() {
   Serial.begin(500000);
@@ -316,7 +339,7 @@ void loop() {
       break;
     case 3:
       noise(micVolume, analogRead(MAX_PIN), analogRead(MIN_PIN));
-      alternatePhrases("SLICE", "8738", colors[0], 800, 300);
+      alternatePhrases("SLICE", "8738", rainbowColors[0], 800, 300);
       break;
     case 4:
       blink(255, 50, 0);
@@ -423,6 +446,10 @@ void noise(int volume, int max, int min) {
 
 int cycleCount = 0;
 
+/**
+ * This will create a wrapping rainbow from one side of the cart, going over the matrix display
+ * and coming back to the other side, splaying 8738 and SLICE as a shadow on the rainbow
+ **/
 void verticalRainbow() {
   if (!currentSideMethod.equals("verticalRainbow")) {
     currentSideMethod = "verticalRainbow";
@@ -469,7 +496,9 @@ void verticalRainbow() {
 
 }
 
-
+/**
+ * Cycles through each of the letters lighting up S L I C E
+ **/
 void cycleAllLetters(int red, int green, int blue, int speed, boolean includeMatrix) {
   if (!currentSideMethod.equals("cycleAllLetters")) {
     currentSideMethod = "cycleAllLetters";
@@ -484,7 +513,7 @@ void cycleAllLetters(int red, int green, int blue, int speed, boolean includeMat
   if (timeInSideSequence < 142 * speed) {
     restartScroll();
     setLetter(1, red, green, blue);
-    if (includeMatrix) showText("SLICE", colors[1]);
+    if (includeMatrix) showText("SLICE", rainbowColors[1]);
     return;
   }
 
@@ -498,33 +527,34 @@ void cycleAllLetters(int red, int green, int blue, int speed, boolean includeMat
   // I
   if (timeInSideSequence < 142 * speed * 3) {
     setLetter(3, red, green, blue);
-    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, colors[3]);
+    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, rainbowColors[3]);
     return;
   }
 
   // C
   if (timeInSideSequence < 142 * speed * 4) {
     setLetter(4, red, green, blue);
-    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, colors[3]);
+    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, rainbowColors[3]);
     return;
   }
 
   // E
   if (timeInSideSequence < 142 * speed * 5) {
     setLetter(5, red, green, blue);   
-    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, colors[3]);
+    if (includeMatrix) coloredScrollingText(F("SQUEEZE!"), 0, 3, rainbowColors[3]);
     return;
   }
 
   restartSide();
 }
 
-//
-// End sequences
-//
-// Begin groups
-//
 
+// Which phase we are in to turn on different groups
+int groupPhase = 0;
+
+/**
+ * Cycles through all of the letters than blinks the whole name
+ **/
 void cycleAndBlink() {
   if (groupPhase == 0) {
     sideFinished = false;
@@ -550,12 +580,9 @@ void cycleAndBlink() {
   }
 }
 
-//
-// End groups
-//
-// Begin setters
-//
-
+/**
+ * Sets a particular letter to a color
+ **/
 void setLetter(int letter, int red, int green, int blue) {
   if (letter == 1) {
     for (int i = 34; i < 43; i++) {
@@ -582,8 +609,11 @@ void setLetter(int letter, int red, int green, int blue) {
   updateLeds();
 }
 
-// Update a row of lights from 0 (E1) to 42 (S9)
-/// @param colors the rgb value to set to
+/**
+ * Sets a particular row to a color
+ * Update a row of lights from 0 (E1) to 42 (S9)
+ * @param colors the rgb value to set to
+ **/
 void setRow(int row, int red, int green, int blue) {
   //right
   strip.setPixelColor(row, red, green, blue);
@@ -596,8 +626,10 @@ void setRow(int row, int red, int green, int blue) {
   strip.setPixelColor(257 + row, red, green, blue);
 }
 
-// Update a row of lights from 0 (E1) to 42 (S9)
-/// @param colors the rgb value to set to
+/**
+ * Sets a particular column to a color
+ * @param colors the rgb value to set to
+ **/
 void setColumn(int col, int red, int green, int blue) {
   switch (col) {
     case 1:
@@ -621,6 +653,9 @@ void setColumn(int col, int red, int green, int blue) {
   }
 }
 
+/**
+ * Updates all LEDs to a color in the range provided
+ **/
 void updateLEDs(int start, int end, int red, int green, int blue) {
   for (int i = start; i <= end; i++) {
     strip.setPixelColor(i, red, green, blue);
@@ -647,23 +682,38 @@ void updateLeds() {
   strip.show();
 }
 
+/**
+ * For the Side panels
+ * Resets the start time and sets finished to true if any cleanup needs to be done
+ **/
 void restartSide() {
   sideSequenceStartTime = time;
   sideFinished = true;
 }
 
+/**
+ * For the Matrix Display
+ * Resets the start time and sets finished to true if any cleanup needs to be done
+ **/
 void restartScroll(){
   scrollSequenceStartTime = time;
   scrollFinished = true;
-  matrixWidth = matrix.width();
+  matrixOffset = matrix.width();
 }
 
-bool alternate = false;
-
+/**
+ * Switches back and forth showing two phrases in a paricular color, 
+ * displaying each for the displayTime and pausing in black for the time in pauseBuffer
+ **/
 void alternatePhrases(String text, String altText, uint16_t color, int displayTime, int pauseBuffer){
   alternatePhrases(text, altText, color, displayTime, pauseBuffer, false);
 }
 
+/**
+ * Switches back and forth showing two phrases in a paricular color, 
+ * displaying each for the displayTime and pausing in black for the time in pauseBuffer
+ * has the option to be inverted where the color is used as the background and the text is in shadow/black
+ **/
 void alternatePhrases(String text, String altText, uint16_t color, int displayTime, int pauseBuffer, bool inverted){
   if (!currentScrollMethod.equals("alternatePhrases")) {
     currentScrollMethod = "alternatePhrases";
@@ -671,13 +721,20 @@ void alternatePhrases(String text, String altText, uint16_t color, int displayTi
     scrollFinished = false;
   }
 
+  // In order to try to stay sane, we declare the times that we need to pay attention to
+  // We obviously start at zero
   int startTime = 0;
+  // This is when the first phrase stops being shown
   int endTimeText = displayTime;
+  // This is when we stop showing the black pause buffer (if > 0)
   int endTimePause = endTimeText + pauseBuffer;
+  // This is when we stop showing the seconf phrase
   int endTimeAltText = endTimePause + displayTime;
+  // This is when we stop showing the final black pause buffer (if > 0)
   int endTime = endTimeAltText + pauseBuffer;
 
-  alternate = timeInScrollSequence >= endTimePause;
+  // Calculate if we are in the alternate timeslot
+  bool alternate = timeInScrollSequence >= endTimePause;
 
   // Give .2 seconds clear between words
   if ((timeInScrollSequence > endTimeText && timeInScrollSequence <= endTimePause) 
@@ -698,10 +755,17 @@ void alternatePhrases(String text, String altText, uint16_t color, int displayTi
   }
 }
 
+/**
+ * Simply shows text in a color, centered
+ **/
 void showText(String text, uint16_t color){
   showText(text, color, true, false);
 }
 
+/**
+ * Simply shows text in a color, centered
+ * Has the option in invert using the color as background and the text as black
+ **/
 void showText(String text, uint16_t color, bool clear, bool inverted){
   if (clear) matrix.clear();
   
@@ -719,11 +783,18 @@ void showText(String text, uint16_t color, bool clear, bool inverted){
 
 }
 
+/**
+ * Clear out the matrix display
+ **/
 void clearMatrix(){
   matrix.clear();
   matrix.show();
 }
 
+/**
+ * Shows text in a color, scrolling starting off the right through the screen until gone, then repeats
+ * and the move Delta determines how fast to go by moving that many LEDs per run
+ **/
 void coloredScrollingText(String scrollText, int pauseTime, int moveDelta, uint16_t color){
   if (!currentScrollMethod.equals("coloredScrollingText")) {
     currentScrollMethod = "coloredScrollingText";
@@ -737,6 +808,12 @@ void coloredScrollingText(String scrollText, int pauseTime, int moveDelta, uint1
   scrollingText(scrollText, pauseTime, moveDelta);
 }
 
+/**
+ * Shows text rolling through colors, scrolling starting off the right through the screen until gone, then repeats
+ * Has the option to show the letters as rainbow vs. changing the whole phrase
+ * The speed of the color change is controlled by colorspeed (how many RGB vales to skip) 
+ * and the move Delta determines how fast to go by moving that many LEDs per run
+ **/
 void rainbowScrollingText(String scrollText, int pauseTime, int colorSpeed, int moveDelta, bool rainbowText){
   if (!currentScrollMethod.equals("rainbowScrollingText")) {
     currentScrollMethod = "rainbowScrollingText";
@@ -760,7 +837,7 @@ void scrollingText(String scrollText, int pauseTime, int moveDelta) {
 void scrollingText(String scrollText, int pauseTime, int moveDelta, bool rainbow, int colorSpeed) {
   matrix.clear();
 
-  matrix.setCursor(matrixWidth, 1);
+  matrix.setCursor(matrixOffset, 1);
   if (rainbow){
     matrixColorWheel.resetRainbow();
     for (int i = 0; i < scrollText.length(); i++){
@@ -775,8 +852,8 @@ void scrollingText(String scrollText, int pauseTime, int moveDelta, bool rainbow
   Serial.println("here");
 
   int length = (int)scrollText.length() * CHAR_PIX_WIDTH * 2;
-  matrixWidth = matrixWidth - moveDelta;
-  if (matrixWidth < -length) {
+  matrixOffset = matrixOffset - moveDelta;
+  if (matrixOffset < -length) {
     restartScroll();
   }
   matrix.show();
