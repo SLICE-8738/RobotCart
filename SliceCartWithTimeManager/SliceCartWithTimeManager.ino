@@ -31,7 +31,7 @@
 #define MAX_PIN A2
 
 // How many LED programs do we have to loop through
-#define LED_PROGRAMS 8
+#define LED_PROGRAMS 9
 
 // Where is the mic connected?
 #define MIC_PIN A0
@@ -355,6 +355,9 @@ void loop() {
     case 7:
       verticalRainbow();
       break;
+    case 8:
+      headLights();
+      break;
     default:
       matrix.clear();
       strip.clear();
@@ -441,6 +444,46 @@ void noise(int volume, int max, int min) {
 
   if (rows > 0) {
     rows--;
+  }
+}
+
+bool goingBrighter = true;
+
+/**
+ * Simple method that makes the front sign light up in white like a flashlight while fading the letters
+ **/
+void headLights() {
+  if (!currentSideMethod.equals("headLights")) {
+    currentSideMethod = "headLights";
+    sideSequenceStartTime = time;
+    sideFinished = false;
+    goingBrighter = true;
+    strip.clear();
+    clearMatrix();
+  } else {
+    // Don't run this if we are past and will reset
+    if (timeInSideSequence <= 2040){
+      // Get a value from 0 to 255 depending on how far we are in the time sequence
+      int fade = (timeInSideSequence % 2040)/8;
+      if (!goingBrighter){
+        // Invert if we are fading out
+        fade = 255 - fade;     
+      }
+      setAll(fade,fade,fade);
+    }
+
+    // For 1 second show SLICE, then 1 second 8738
+    if (timeInSideSequence <= 255 * 4) {
+        showText("SLICE", WHITE, true, true);
+        return;
+    } else if (timeInSideSequence <= 255 * 8) {
+        showText("8738", WHITE, true, true);
+        return;
+    } else {
+      sideSequenceStartTime = time;
+      goingBrighter = !goingBrighter;
+    }
+
   }
 }
 
@@ -849,7 +892,6 @@ void scrollingText(String scrollText, int pauseTime, int moveDelta, bool rainbow
   } else {
     matrix.print(scrollText);
   }
-  Serial.println("here");
 
   int length = (int)scrollText.length() * CHAR_PIX_WIDTH * 2;
   matrixOffset = matrixOffset - moveDelta;
